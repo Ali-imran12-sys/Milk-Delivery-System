@@ -14,6 +14,7 @@ const DailyMilkEntry = () => {
   });
   const [alert, setAlert] = useState({ show: false, message: '', type: '' });
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     loadData();
@@ -105,6 +106,18 @@ const DailyMilkEntry = () => {
     return milkEntries.reduce((sum, entry) => sum + entry.quantity, 0);
   };
 
+  const filteredEntries = milkEntries.filter(entry => {
+    const customer = customers.find(c => c.id === entry.customerId);
+    const searchLower = search.toLowerCase();
+    return (
+      !search ||
+      (customer && (
+        customer.name.toLowerCase().includes(searchLower) ||
+        customer.phone.toLowerCase().includes(searchLower)
+      ))
+    );
+  });
+
   return (
     <div>
       <div className="card">
@@ -117,6 +130,14 @@ const DailyMilkEntry = () => {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               style={{ width: 'auto' }}
+            />
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search customer by name or phone..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width: '220px' }}
             />
             <button 
               className="btn btn-primary"
@@ -171,14 +192,14 @@ const DailyMilkEntry = () => {
             </tr>
           </thead>
           <tbody>
-            {milkEntries.length === 0 ? (
+            {filteredEntries.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', color: '#718096', fontStyle: 'italic' }}>
-                  No entries found for {format(new Date(selectedDate), 'dd/MM/yyyy')}. Add your first entry to get started.
+                  No entries found for {format(new Date(selectedDate), 'dd/MM/yyyy')}.
                 </td>
               </tr>
             ) : (
-              milkEntries.map(entry => (
+              filteredEntries.map(entry => (
                 <tr key={entry.id}>
                   <td>{entry.customerName}</td>
                   <td>{entry.quantity}</td>

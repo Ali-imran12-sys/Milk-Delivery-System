@@ -98,6 +98,16 @@ const Reports = () => {
     });
   };
 
+  const saveReportToHistory = (csv, title, customerName, type) => {
+    const generatedAt = new Date().toLocaleString();
+    const fileName = `${title.replace(/\s+/g, '_')}.csv`;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const prev = JSON.parse(localStorage.getItem('customerReports') || '[]');
+    prev.unshift({ title, customerName, type, generatedAt, downloadUrl, fileName });
+    localStorage.setItem('customerReports', JSON.stringify(prev.slice(0, 100)));
+  };
+
   const exportReport = () => {
     if (!reportData) return;
 
@@ -117,6 +127,8 @@ const Reports = () => {
     reportData.entries.forEach(entry => {
       csv += `${format(new Date(entry.date), 'dd/MM/yyyy')},${entry.customerName},${entry.quantity},${entry.rate},${entry.amount.toFixed(2)},"${(entry.notes || '').replace(/"/g, '""')}"\n`;
     });
+
+    saveReportToHistory(csv, reportData.title, (reportType === 'customer' && selectedCustomer) ? (customers.find(c => c.id === selectedCustomer)?.name || '') : '', reportType);
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
